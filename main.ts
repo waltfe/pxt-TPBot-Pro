@@ -193,16 +193,7 @@ namespace TPBot {
 
         lspeed = Math.max(Math.abs(lspeed), 100);
         rspeed = Math.max(Math.abs(rspeed), 100);
-
-        let buff = pins.createBuffer(7);
-        buff[0] = 0xFF; // 帧头
-        buff[1] = 0xF9; // 帧头
-        buff[2] = 0x10; // 指令
-        buff[3] = 0x07; // 参数长度
-        buff[4] = lspeed;
-        buff[5] = rspeed;
-        buff[6] = direction;
-        pins.i2cWriteBuffer(TPBotAdd, buff);
+        pins.i2cWriteBuffer(TPBotAdd, createBuf(0x10, [lspeed, rspeed, direction]));
 
     }
 
