@@ -146,7 +146,7 @@ namespace TPBot {
     /******************************************************************************************************
      * 工具函数
      ******************************************************************************************************/
-    function createBuf(command: number, ...params: array) {
+    function createBuf(command: number, ...params: Array<number>) {
         let buff = pins.createBuffer(params.length + 4);
         buff[0] = 0xFF; // 帧头
         buff[1] = 0xF9; // 帧头
