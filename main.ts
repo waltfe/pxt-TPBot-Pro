@@ -143,6 +143,28 @@ namespace TPBot {
         S360 = 1
     }
 
+
+    /******************************************************************************************************
+     * 工具函数
+     ******************************************************************************************************/
+    function createBuf(command: number, ...params: nubmer[]) {
+        let buff = pins.createBuffer(params.length + 4);
+        buff[0] = 0xFF; // 帧头
+        buff[1] = 0xF9; // 帧头
+        buff[2] = command; // 指令
+        buff[3] = params.length; // 参数长度
+        for (let i = 0; i < params.length; i++) {
+            buff[i + 4] = params[i];
+        }
+        return buff;
+    }
+
+
+
+    /******************************************************************************************************
+     * 积木块定义
+     ******************************************************************************************************/
+
     /**
      * Set the speed of left and right wheels. 
      * @param lspeed Left wheel speed , eg: 100
@@ -152,40 +174,22 @@ namespace TPBot {
     //% block="Set left wheel speed at %lspeed\\%| right wheel speed at %rspeed\\%"
     //% lspeed.min=-100 lspeed.max=100
     //% rspeed.min=-100 rspeed.max=100
-    export function setWheels(lspeed: number = 50, rspeed: number = 50): void {
-        if (lspeed > 100) {
-            lspeed = 100;
-        } else if (lspeed < -100) {
-            lspeed = -100;
+    export function motor_control(lspeed: number = 50, rspeed: number = 50): void {
+
+        let direction: number = 0;
+        if (lspeed < 0) {
+            direction |= 0x01;
         }
-        if (rspeed > 100) {
-            rspeed = 100;
-        } else if (rspeed < -100) {
-            rspeed = -100;
+        if (rspeed < 0) {
+            direction |= 0x2;
         }
-        Buff[0] = 0x01;    //控制位 0x01电机
-        Buff[1] = lspeed;
-        Buff[2] = rspeed;
-        Buff[3] = 0x00;        //正反转加权值
-        if (lspeed < 0 && rspeed < 0) {
-            Buff[1] = lspeed * -1;
-            Buff[2] = rspeed * -1;
-            Buff[3] = 0x03;          //正反转加权值
-        }
-        else {
-            if (lspeed < 0) {
-                Buff[1] = lspeed * -1;
-                Buff[2] = rspeed;
-                Buff[3] = 0x01;
-            }
-            if (rspeed < 0) {
-                Buff[1] = lspeed;
-                Buff[2] = rspeed * -1;
-                Buff[3] = 0x02;
-            }
-        }
-        pins.i2cWriteBuffer(TPBotAdd, Buff);
+
+        lspeed = Math.max(Math.abs(lspeed), 100);
+        rspeed = Math.max(Math.abs(rspeed), 100);
+        pins.i2cWriteBuffer(TPBotAdd, createBuf(0x10, lspeed, rspeed, direction));
+
     }
+
     /**
     * Setting the direction and time of travel.
     * @param direc Left wheel speed , eg: DriveDirection.Forward
@@ -197,26 +201,27 @@ namespace TPBot {
     //% direc.fieldEditor="gridpicker" direc.fieldOptions.columns=2
     export function setTravelTime(direc: DriveDirection, speed: number, time: number): void {
         if (direc == 0) {
-            setWheels(speed, speed)
+            motor_control(speed, speed)
             basic.pause(time * 1000)
             stopCar()
         }
         if (direc == 1) {
-            setWheels(-speed, -speed)
+            motor_control(-speed, -speed)
             basic.pause(time * 1000)
             stopCar()
         }
         if (direc == 2) {
-            setWheels(-speed, speed)
+            motor_control(-speed, speed)
             basic.pause(time * 1000)
             stopCar()
         }
         if (direc == 3) {
-            setWheels(speed, -speed)
+            motor_control(speed, -speed)
             basic.pause(time * 1000)
             stopCar()
         }
     }
+
     /**
     * Setting the direction and speed of travel.
     * @param direc Left wheel speed , eg: DriveDirection.Forward
@@ -228,30 +233,28 @@ namespace TPBot {
     //% direc.fieldEditor="gridpicker" direc.fieldOptions.columns=2
     export function setTravelSpeed(direc: DriveDirection, speed: number): void {
         if (direc == 0) {
-            setWheels(speed, speed)
+            motor_control(speed, speed)
         }
         if (direc == 1) {
-            setWheels(-speed, -speed)
+            motor_control(-speed, -speed)
         }
         if (direc == 2) {
-            setWheels(-speed, speed)
+            motor_control(-speed, speed)
         }
         if (direc == 3) {
-            setWheels(speed, -speed)
+            motor_control(speed, -speed)
         }
     }
+
     /**
     * Stop the car. 
     */
     //% weight=80
     //% block="Stop the car immediately"
     export function stopCar(): void {
-        Buff[0] = 0x01;     //控制位 0x01电机
-        Buff[1] = 0;		//左轮速度
-        Buff[2] = 0;        //右轮速度
-        Buff[3] = 0;        //正反转加权值
-        pins.i2cWriteBuffer(TPBotAdd, Buff);  //传递数据
+        motor_control(0, 0);
     }
+
     /**
      * track one side
      * @param side Line sensor edge , eg: LineState.Left
