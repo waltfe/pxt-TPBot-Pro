@@ -146,7 +146,7 @@ namespace TPBot {
     /******************************************************************************************************
      * 工具函数
      ******************************************************************************************************/
-    function createBuf(command: number, ...params: Array<number>) {
+    function createBuf(command: number, params: number[]) {
         let buff = pins.createBuffer(params.length + 4);
         buff[0] = 0xFF; // 帧头
         buff[1] = 0xF9; // 帧头
@@ -193,7 +193,7 @@ namespace TPBot {
 
         lspeed = Math.max(Math.abs(lspeed), 100);
         rspeed = Math.max(Math.abs(rspeed), 100);
-        pins.i2cWriteBuffer(TPBotAdd, createBuf(0x10, lspeed, rspeed, direction));
+        pins.i2cWriteBuffer(TPBotAdd, createBuf(0x10, [lspeed, rspeed, direction]));
 
     }
 
@@ -427,7 +427,7 @@ namespace TPBot {
     //% g.min=0 g.max=255
     //% b.min=0 b.max=255
     export function headlightRGB(r: number, g: number, b: number): void {
-        pins.i2cWriteBuffer(TPBotAdd, createBuf(0x30, r, g, b));
+        pins.i2cWriteBuffer(TPBotAdd, createBuf(0x30, [r, g, b]));
     }
     /**
     * Turn off the eye mask lamp.
@@ -450,7 +450,7 @@ namespace TPBot {
     //% speed.min=-100 speed.max=100
     export function setServo360(servo: ServoList, speed: number = 100): void {
         speed = Math.map(speed, -100, 100, 0, 180);
-        pins.i2cWriteBuffer(TPBotAdd, createBuf(0x20, servo, speed));
+        pins.i2cWriteBuffer(TPBotAdd, createBuf(0x20, [servo, speed]));
     }
 
     /**
@@ -469,6 +469,6 @@ namespace TPBot {
                 angle = Math.map(angle, 0, 360, 0, 180)
                 break
         }
-        pins.i2cWriteBuffer(TPBotAdd, createBuf(0x20, servo, angle));
+        pins.i2cWriteBuffer(TPBotAdd, createBuf(0x20, [servo, angle]));
     }
 }
