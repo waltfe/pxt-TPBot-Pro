@@ -59,13 +59,13 @@ namespace TPBot {
     */
     export enum ServoList {
         //% block="S1"
-        S1 = 0,
+        S1 = 1,
         //% block="S2"
-        S2 = 1,
+        S2 = 2,
         //% block="S3"
-        S3 = 2,
+        S3 = 3,
         //% block="S4"
-        S4 = 3
+        S4 = 4
     }
     /**
     * Line Sensor states  
@@ -157,6 +157,14 @@ namespace TPBot {
             buff[i + 4] = params[i];
         }
         return buff;
+    }
+
+    function initEvents(): void {
+        if (_initEvents) {
+            pins.setEvents(DigitalPin.P13, PinEventType.Edge);
+            pins.setEvents(DigitalPin.P14, PinEventType.Edge);
+            _initEvents = false;
+        }
     }
 
 
@@ -401,10 +409,9 @@ namespace TPBot {
     //% weight=30
     //% color.shadow="colorNumberPicker"
     export function headlightColor(color: number) {
-        let r, g, b: number = 0
-        r = color >> 16
-        g = (color >> 8) & 0xFF
-        b = color & 0xFF
+        let r = color >> 16
+        let g = (color >> 8) & 0xFF
+        let b = color & 0xFF
         headlightRGB(r, g, b)
     }
 
@@ -421,11 +428,7 @@ namespace TPBot {
     //% g.min=0 g.max=255
     //% b.min=0 b.max=255
     export function headlightRGB(r: number, g: number, b: number): void {
-        Buff[0] = 0x20;
-        Buff[1] = r;
-        Buff[2] = g;
-        Buff[3] = b;
-        pins.i2cWriteBuffer(TPBotAdd, Buff);
+        pins.i2cWriteBuffer(TPBotAdd, createBuf(0x30, r, g, b));
     }
     /**
     * Turn off the eye mask lamp.
@@ -447,33 +450,10 @@ namespace TPBot {
     //% servo.fieldOptions.columns=1
     //% speed.min=-100 speed.max=100
     export function setServo360(servo: ServoList, speed: number = 100): void {
-        speed = Math.map(speed, -100, 100, 0, 180)
-        switch (servo) {
-            case 0:
-                Buff[0] = 0x10;
-                break;
-            case 1:
-                Buff[0] = 0x11;
-                break;
-            case 2:
-                Buff[0] = 0x12;
-                break;
-            case 3:
-                Buff[0] = 0x13;
-                break;
-        }
-        Buff[1] = speed;
-        Buff[2] = 0;
-        Buff[3] = 0;
-        pins.i2cWriteBuffer(TPBotAdd, Buff);
+        speed = Math.map(speed, -100, 100, 0, 180);
+        pins.i2cWriteBuffer(TPBotAdd, createBuf(0x20, servo, speed));
     }
-    function initEvents(): void {
-        if (_initEvents) {
-            pins.setEvents(DigitalPin.P13, PinEventType.Edge);
-            pins.setEvents(DigitalPin.P14, PinEventType.Edge);
-            _initEvents = false;
-        }
-    }
+
     /**
      * Set the angle of servo. 
      * @param servo ServoList, eg: ServoList.S1
@@ -482,20 +462,6 @@ namespace TPBot {
     //% weight=15
     //% block="Set %ServoTypeList servo %servo angle to %angle °"
     export function setServo(servoType: ServoTypeList, servo: ServoList, angle: number = 0): void {
-        switch (servo) {
-            case 0:
-                Buff[0] = 0x10;
-                break;
-            case 1:
-                Buff[0] = 0x11;
-                break;
-            case 2:
-                Buff[0] = 0x12;
-                break;
-            case 3:
-                Buff[0] = 0x13;
-                break;
-        }
         switch (servoType) {
             case ServoTypeList.S180:
                 angle = Math.map(angle, 0, 180, 0, 180)
@@ -504,10 +470,6 @@ namespace TPBot {
                 angle = Math.map(angle, 0, 360, 0, 180)
                 break
         }
-
-        Buff[1] = angle;
-        Buff[2] = 0;
-        Buff[3] = 0;
-        pins.i2cWriteBuffer(TPBotAdd, Buff);
+        pins.i2cWriteBuffer(TPBotAdd, createBuf(0x20, servo, angle));
     }
 }
