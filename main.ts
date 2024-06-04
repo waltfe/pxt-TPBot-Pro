@@ -191,8 +191,8 @@ namespace TPBot {
             direction |= 0x2;
         }
 
-        lspeed = Math.max(Math.abs(lspeed), 100);
-        rspeed = Math.max(Math.abs(rspeed), 100);
+        lspeed = Math.min(Math.abs(lspeed), 100);
+        rspeed = Math.min(Math.abs(rspeed), 100);
         pins.i2cWriteBuffer(TPBotAdd, createBuf(0x10, [lspeed, rspeed, direction]));
 
     }
