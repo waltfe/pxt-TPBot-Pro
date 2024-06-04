@@ -449,7 +449,7 @@ namespace TPBot {
     //% servo.fieldOptions.columns=1
     //% speed.min=-100 speed.max=100
     export function setServo360(servo: ServoList, speed: number = 100): void {
-        speed = Math.map(speed, -100, 100, 0, 180);
+        speed = Math.map(speed, -100, 100, 0, 1800);
         pins.i2cWriteBuffer(TPBotAdd, createBuf(0x20, [servo, speed]));
     }
 
@@ -463,10 +463,10 @@ namespace TPBot {
     export function setServo(servoType: ServoTypeList, servo: ServoList, angle: number = 0): void {
         switch (servoType) {
             case ServoTypeList.S180:
-                angle = Math.map(angle, 0, 180, 0, 180)
+                angle = Math.map(angle, 0, 180, 0, 1800)
                 break
             case ServoTypeList.S360:
-                angle = Math.map(angle, 0, 360, 0, 180)
+                angle = Math.map(angle, 0, 360, 0, 1800)
                 break
         }
         pins.i2cWriteBuffer(TPBotAdd, createBuf(0x20, [servo, angle]));
