@@ -142,6 +142,20 @@ namespace TPBot {
         S360 = 1
     }
 
+    export enum DistanceUnit {
+        //%block="cm/s"
+        Cm_s,
+        //%block="inch/s"
+        Inch_s
+    }
+
+    export enum Direction {
+        //%block="Forward"
+        Forward,
+        //%block="Backward"
+        Backward
+    }
+
 
     /******************************************************************************************************
      * 工具函数
@@ -178,6 +192,7 @@ namespace TPBot {
      * @param rspeed Right wheel speed, eg: -100
      */
     //% weight=99
+    //% group="Basic functions"
     //% block="Set left wheel speed at %lspeed\\%| right wheel speed at %rspeed\\%"
     //% lspeed.min=-100 lspeed.max=100
     //% rspeed.min=-100 rspeed.max=100
@@ -203,6 +218,7 @@ namespace TPBot {
     * @param speed Travel time, eg: 100
     */
     //% weight=95
+    //% group="Basic functions"
     //% block="Go %direc at speed %speed\\% for %time seconds"
     //% speed.min=0 speed.max=100
     //% direc.fieldEditor="gridpicker" direc.fieldOptions.columns=2
@@ -235,6 +251,7 @@ namespace TPBot {
     * @param speed Travel time, eg: 100
     */
     //% weight=90
+    //% group="Basic functions"
     //% block="Go %direc at speed %speed\\%"
     //% speed.min=0 speed.max=100
     //% direc.fieldEditor="gridpicker" direc.fieldOptions.columns=2
@@ -257,6 +274,7 @@ namespace TPBot {
     * Stop the car. 
     */
     //% weight=80
+    //% group="Basic functions"
     //% block="Stop the car immediately"
     export function stopCar(): void {
         motor_control(0, 0);
@@ -268,6 +286,7 @@ namespace TPBot {
      * @param state Line sensor status, eg: LineSide.FindLine
      */
     //% weight=70
+    //% group="Basic functions"
     //% block="%side line sensor detected %state"
     //% state.fieldEditor="gridpicker" state.fieldOptions.columns=2
     //% side.fieldEditor="gridpicker" side.fieldOptions.columns=2
@@ -297,6 +316,7 @@ namespace TPBot {
     * @param state Four states of tracking module, eg: TrackingState.L_R_line
     */
     //% weight=60
+    //% group="Basic functions"
     //% block="Line sensor state is %state"
     //% state.fieldEditor="gridpicker"
     //% state.fieldOptions.columns=1
@@ -325,6 +345,7 @@ namespace TPBot {
     * Runs when line sensor finds or loses.
     */
     //% weight=50
+    //% group="Basic functions"
     //% block="On %side| line sensor detected %state"
     //% side.fieldEditor="gridpicker" side.fieldOptions.columns=2
     //% state.fieldEditor="gridpicker" state.fieldOptions.columns=2
@@ -338,6 +359,7 @@ namespace TPBot {
     * @param Sonarunit two states of ultrasonic module, eg: SonarUnit.Centimeters
     */
     //% weight=40
+    //% group="Basic functions"
     //% block="Sonar distance unit %unit"
     //% unit.fieldEditor="gridpicker"
     //% unit.fieldOptions.columns=2
@@ -380,6 +402,7 @@ namespace TPBot {
     * @param judge state, eg: Sonarjudge.<
     */
     //% weight=35
+    //% group="Basic functions"
     //% block="Sonar distance %judge %dis cm"
     //% dis.min=1 dis.max=400
     //% judge.fieldEditor="gridpicker" judge.fieldOptions.columns=2
@@ -406,6 +429,7 @@ namespace TPBot {
     */
     //% block="Set headlight color to $color"
     //% weight=30
+    //% group="Basic functions"
     //% color.shadow="colorNumberPicker"
     export function headlightColor(color: number) {
         let r = color >> 16
@@ -421,6 +445,7 @@ namespace TPBot {
     * @param b B color value of RGB color, eg: 236
     */
     //% weight=25
+    //% group="Basic functions"
     //% inlineInputMode=inline
     //% block="Set headlight color to R:%r G:%g B:%b"
     //% r.min=0 r.max=255
@@ -433,6 +458,7 @@ namespace TPBot {
     * Turn off the eye mask lamp.
     */
     //% block="Turn off the headlights"
+    //% group="Basic functions"
     //% weight=20
     export function headlightClose(): void {
         headlightRGB(0, 0, 0)
@@ -444,6 +470,7 @@ namespace TPBot {
     * @param speed speed of servo, eg: 100
     */
     //% weight=14
+    //% group="Basic functions"
     //% block="Set 360° servo %servo speed to %speed \\%"
     //% servo.fieldEditor="gridpicker"
     //% servo.fieldOptions.columns=1
@@ -459,6 +486,7 @@ namespace TPBot {
      * @param angle angle of servo, eg: 0
      */
     //% weight=15
+    //% group="Basic functions"
     //% block="Set %ServoTypeList servo %servo angle to %angle °"
     export function setServo(servoType: ServoTypeList, servo: ServoList, angle: number = 0): void {
         switch (servoType) {
@@ -471,4 +499,202 @@ namespace TPBot {
         }
         pins.i2cWriteBuffer(TPBotAdd, createBuf(0x20, [servo, angle]));
     }
+
+
+
+    /***********************************************************************************************
+     * PID控制
+     ***********************************************************************************************/
+
+    /**
+     * control the car to travel at a specific speed (speed.min=20cm/s speed.max=50cm/s)
+     */
+    //% group="PID Control"
+    //% block="set left wheel speed %lspeed, right wheel speed %rspeed %unit"
+    //% weight=210
+    export function pid_speed_control(lspeed: number, rspeed: number, unit: DistanceUnit): void {
+
+        let direction: number = 0;
+        if (lspeed < 0) {
+            direction |= 0x01;
+        }
+
+        if (rspeed < 0) {
+            direction |= 0x2;
+        }
+
+        switch (unit) {
+            case DistanceUnit.Cm_s:
+                lspeed *= 10;
+                rspeed *= 10;
+                break;
+            case DistanceUnit.Inch_s:
+                lspeed *= 304.8;
+                rspeed *= 304.8;
+                break;
+        }
+
+        lspeed = Math.abs(lspeed);
+        lspeed = Math.min(lspeed, 500);
+        lspeed = Math.max(lspeed, 200);
+
+        rspeed = Math.abs(rspeed);
+        rspeed = Math.min(rspeed, 500);
+        rspeed = Math.max(rspeed, 200);
+
+        let lspeed_h = lspeed >> 8;
+        let lspeed_l = lspeed & 0xFF;
+        let rspeed_h = rspeed >> 8;
+        let rspeed_l = rspeed & 0xFF;
+
+        pins.i2cWriteBuffer(TPBotAdd, createBuf(0x40, [lspeed_h, lspeed_l, rspeed_h, rspeed_l, direction]));
+
+    }
+
+    /**
+     * set the car to travel a specific distance(distance.max=6000cm, distance.min=0cm)
+     */
+    //% group="PID Control"
+    //% weight=200
+    //% block="go %CutebotProOrientation %distance %CutebotProDistanceUnits"
+    export function pid_run_distance(direction: Direction, distance: number, unit: DistanceUnit): void {
+
+        distance *= (unit == DistanceUnit.Cm_s ? 10 : 304.8)
+        let distance_h = distance >> 8;
+        let distance_l = distance & 0xFF;
+        let direction_flag = (direction == Direction.Forward ? 0 : 3);
+        pins.i2cWriteBuffer(TPBotAdd, createBuf(0x41, [distance_h, distance_l, direction_flag]));
+        basic.pause(distance * 2 + 500) // 小车以500mm/s速度运行, 冗余0.5s 
+    }
+
+    // /**
+    //  * 
+    //  */
+    // //% group="PID Control"
+    // //% weight=200
+    // //% block="set %CutebotProWheel rotation %angle %CutebotProAngleUnits"
+    // export function angleRunning(orientation: CutebotProWheel, angle: number, angleUnits: CutebotProAngleUnits): void {
+    //     let buf = pins.createBuffer(7)
+    //     let curtime = 0
+    //     let oldtime = 0
+    //     let tempangle = 0
+    //     CutebotPro.pwmCruiseControl(0, 0)
+    //     if (angleUnits == CutebotProAngleUnits.Angle)
+    //         tempangle = angle;
+    //     else if (angleUnits == CutebotProAngleUnits.Circle)
+    //         tempangle = angle * 360;
+    //     if (tempangle < 0)
+    //         tempangle = -tempangle
+
+    //     buf[0] = 0x99;
+    //     buf[1] = 0x04;
+    //     buf[2] = orientation;
+    //     buf[3] = (tempangle >> 8) & 0xff;
+    //     buf[4] = (tempangle >> 0) & 0xff;
+    //     if (angle < 0)
+    //         buf[5] = 0x00;
+    //     else
+    //         buf[5] = 0x01;
+    //     buf[6] = 0x88;
+    //     pins.i2cWriteBuffer(i2cAddr, buf)
+    //     basic.pause(1000)
+    //     while (1) {
+    //         if (readSpeed(CutebotProMotors1.M1, CutebotProSpeedUnits.Cms) == 0 && readSpeed(CutebotProMotors1.M2, CutebotProSpeedUnits.Cms) == 0) {
+    //             basic.pause(1000)
+    //             if (readSpeed(CutebotProMotors1.M1, CutebotProSpeedUnits.Cms) == 0 && readSpeed(CutebotProMotors1.M2, CutebotProSpeedUnits.Cms) == 0)
+    //                 break
+    //         }
+
+    //     }
+
+    // }
+
+    /**
+    * set block length
+    */
+    //% group="PID Control"
+    //% weight=180
+    //% block="set length of the squares as %length %DistanceUnit"
+    let blockLength: number = 0;
+    let blockUnit: DistanceUnit = DistanceUnit.Cm_s;
+    export function pid_block_set(length: number, distanceUnit: DistanceUnit): void {
+        blockLength = length
+        blockUnit = distanceUnit
+    }
+
+    /**
+    * run a specific number of block
+    */
+    //% group="PID Control"
+    //% weight=170
+    //% block="go forward %cnt squares"
+    export function pid_run_block(cnt: number): void {
+        pid_run_distance(Direction.Forward, blockLength * cnt, blockUnit)
+    }
+
+
+    // /**
+    //  * set the trolley to rotate at a specific Angle
+    //  */
+    // //% group="PID Control"
+    // //% weight=190
+    // //% block="set car %CutebotProTurn for angle %CutebotProAngle"
+    // export function trolleySteering(turn: CutebotProTurn, angle: CutebotProAngle): void {
+    //     let buf = pins.createBuffer(7)
+    //     let curtime = 0
+    //     let oldtime = 0
+    //     let tempangle = 0
+    //     let orientation = 0
+    //     let cmd = 0
+    //     CutebotPro.pwmCruiseControl(0, 0)
+    //     basic.pause(1000)
+
+    //     if (angle == CutebotProAngle.Angle45)
+    //         tempangle = 150
+    //     else if (angle == CutebotProAngle.Angle90)
+    //         tempangle = 316
+    //     else if (angle == CutebotProAngle.Angle135)
+    //         tempangle = 450
+    //     else
+    //         tempangle = 630
+
+    //     if (turn == CutebotProTurn.Left) {
+    //         orientation = CutebotProWheel.RightWheel
+    //         cmd = 0x04
+    //     }
+    //     else if (turn == CutebotProTurn.Right) {
+    //         orientation = CutebotProWheel.LeftWheel
+    //         cmd = 0x04
+    //     }
+    //     else {
+    //         orientation = CutebotProWheel.AllWheel
+    //         cmd = 23
+    //         tempangle = tempangle + 4
+    //     }
+
+    //     buf[0] = 0x99;
+    //     buf[1] = cmd;
+    //     buf[2] = orientation;
+    //     buf[3] = (tempangle >> 8) & 0xff;
+    //     buf[4] = (tempangle >> 0) & 0xff;
+    //     if (turn == CutebotProTurn.RightInPlace)
+    //         buf[5] = 0x00;
+    //     else
+    //         buf[5] = 0x01;
+    //     buf[6] = 0x88;
+    //     pins.i2cWriteBuffer(i2cAddr, buf)
+    //     basic.pause(1000)
+    //     while (1) {
+    //         if (readSpeed(CutebotProMotors1.M1, CutebotProSpeedUnits.Cms) == 0 && readSpeed(CutebotProMotors1.M2, CutebotProSpeedUnits.Cms) == 0) {
+    //             basic.pause(1000)
+    //             if (readSpeed(CutebotProMotors1.M1, CutebotProSpeedUnits.Cms) == 0 && readSpeed(CutebotProMotors1.M2, CutebotProSpeedUnits.Cms) == 0)
+    //                 break
+    //         }
+
+    //     }
+    //     basic.pause(1000)
+    // }
+
+
+
 }
