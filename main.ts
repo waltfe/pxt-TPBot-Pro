@@ -143,10 +143,10 @@ namespace TPBot {
     }
 
     export enum DistanceUnit {
-        //%block="cm/s"
-        Cm_s,
-        //%block="inch/s"
-        Inch_s
+        //%block="cm"
+        Cm,
+        //%block="inch"
+        Inch
     }
 
     export enum Direction {
@@ -524,11 +524,11 @@ namespace TPBot {
         }
 
         switch (unit) {
-            case DistanceUnit.Cm_s:
+            case DistanceUnit.Cm:
                 lspeed *= 10;
                 rspeed *= 10;
                 break;
-            case DistanceUnit.Inch_s:
+            case DistanceUnit.Inch:
                 lspeed *= 304.8;
                 rspeed *= 304.8;
                 break;
@@ -609,14 +609,15 @@ namespace TPBot {
 
     // }
 
+    let blockLength: number = 0;
+    let blockUnit: DistanceUnit = DistanceUnit.Cm;
+
     /**
     * set block length
     */
     //% group="PID Control"
     //% weight=180
     //% block="set length of the squares as %length %DistanceUnit"
-    let blockLength: number = 0;
-    let blockUnit: DistanceUnit = DistanceUnit.Cm_s;
     export function pid_block_set(length: number, distanceUnit: DistanceUnit): void {
         blockLength = length
         blockUnit = distanceUnit
