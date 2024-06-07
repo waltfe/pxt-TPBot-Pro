@@ -163,6 +163,22 @@ namespace TPBot {
         Backward
     }
 
+    export enum TPBotWheel {
+        //%block="WheelLeft"
+        WheelLeft = 1,
+        //%block="WheelRight"
+        WheelRight = 2,
+        //%block="WheelALL"
+        WheelALL = 3
+    }
+
+    export enum AngleUnits {
+        //%block="Angle"
+        Angle,
+        //%block="Circle"
+        Circle,
+    }
+
 
     /******************************************************************************************************
      * 工具函数
@@ -574,47 +590,33 @@ namespace TPBot {
         basic.pause(distance * 2 + 100) // 小车以500mm/s速度运行, 冗余0.1s 
     }
 
-    // /**
-    //  * 
-    //  */
-    // //% group="PID Control"
-    // //% weight=200
-    // //% block="set %CutebotProWheel rotation %angle %CutebotProAngleUnits"
-    // export function angleRunning(orientation: CutebotProWheel, angle: number, angleUnits: CutebotProAngleUnits): void {
-    //     let buf = pins.createBuffer(7)
-    //     let curtime = 0
-    //     let oldtime = 0
-    //     let tempangle = 0
-    //     CutebotPro.pwmCruiseControl(0, 0)
-    //     if (angleUnits == CutebotProAngleUnits.Angle)
-    //         tempangle = angle;
-    //     else if (angleUnits == CutebotProAngleUnits.Circle)
-    //         tempangle = angle * 360;
-    //     if (tempangle < 0)
-    //         tempangle = -tempangle
+    /**
+     * 
+     */
+    //% group="PID Control"
+    //% weight=200
+    //% block="set %TPBotWheel rotation %angle %AngleUnits"
+    export function pid_run_angle(Wheel: TPBotWheel, angle: number, angleUnits: AngleUnits): void {
+        let l_angle_h = 0;
+        let l_angle_l
+        let r_angle_h
+        let r_angle_l
+        let direction
+        if (angleUnits == AngleUnits.Circle) angle *= 360;
+        if (angle < 0) direction = 3;
 
-    //     buf[0] = 0x99;
-    //     buf[1] = 0x04;
-    //     buf[2] = orientation;
-    //     buf[3] = (tempangle >> 8) & 0xff;
-    //     buf[4] = (tempangle >> 0) & 0xff;
-    //     if (angle < 0)
-    //         buf[5] = 0x00;
-    //     else
-    //         buf[5] = 0x01;
-    //     buf[6] = 0x88;
-    //     pins.i2cWriteBuffer(i2cAddr, buf)
-    //     basic.pause(1000)
-    //     while (1) {
-    //         if (readSpeed(CutebotProMotors1.M1, CutebotProSpeedUnits.Cms) == 0 && readSpeed(CutebotProMotors1.M2, CutebotProSpeedUnits.Cms) == 0) {
-    //             basic.pause(1000)
-    //             if (readSpeed(CutebotProMotors1.M1, CutebotProSpeedUnits.Cms) == 0 && readSpeed(CutebotProMotors1.M2, CutebotProSpeedUnits.Cms) == 0)
-    //                 break
-    //         }
+        if (Wheel == TPBotWheel.WheelLeft || Wheel == TPBotWheel.WheelALL) {
+            l_angle_l = angle & 0xFF;
+            l_angle_h = angle >> 8;
+        }
+        if (Wheel == TPBotWheel.WheelRight || Wheel == TPBotWheel.WheelALL) {
+            r_angle_l = angle & 0xFF;
+            r_angle_h = angle >> 8;
+        }
 
-    //     }
-
-    // }
+        pins.i2cWriteBuffer(TPBotAdd, createBuf(0x42, [l_angle_h, l_angle_l, r_angle_h, r_angle_l, direction]));
+        basic.pause(angle * 10)
+    }
 
     let blockLength: number = 0;
     let blockUnit: DistanceUnit = DistanceUnit.Cm;
