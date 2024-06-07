@@ -165,20 +165,41 @@ namespace TPBot {
 
     export enum TPBotWheel {
         //%block="WheelLeft"
-        WheelLeft = 1,
+        WheelLeft = 0,
         //%block="WheelRight"
-        WheelRight = 2,
+        WheelRight = 1,
         //%block="WheelALL"
-        WheelALL = 3
+        WheelALL = 2
     }
 
     export enum AngleUnits {
         //%block="Angle"
         Angle,
         //%block="Circle"
-        Circle,
+        Circle
     }
 
+    export enum TPBotTurn {
+        //%block="leftsteering"
+        leftsteering = 0,
+        //%block="Rightsteering"
+        Rightsteering = 1,
+        //%block="Stay_leftsteering"
+        Stay_leftsteering = 2,
+        //%block="Stay_Rightsteering"
+        Stay_Rightsteering = 3
+    }
+
+    export enum TPBotTurnAngle {
+        //% block="45°"
+        T45 = 45,
+        //% block="90°"
+        T90 = 90,
+        //% block="135°"
+        T135 = 135,
+        //% block="180°"
+        T180 = 180
+    }
 
     /******************************************************************************************************
      * 工具函数
@@ -598,10 +619,10 @@ namespace TPBot {
     //% block="set %TPBotWheel rotation %angle %AngleUnits"
     export function pid_run_angle(Wheel: TPBotWheel, angle: number, angleUnits: AngleUnits): void {
         let l_angle_h = 0;
-        let l_angle_l
-        let r_angle_h
-        let r_angle_l
-        let direction
+        let l_angle_l = 0;
+        let r_angle_h = 0;
+        let r_angle_l = 0;
+        let direction = 0;
         if (angleUnits == AngleUnits.Circle) angle *= 360;
         if (angle < 0) direction = 3;
 
@@ -643,68 +664,45 @@ namespace TPBot {
     }
 
 
-    // /**
-    //  * set the trolley to rotate at a specific Angle
-    //  */
-    // //% group="PID Control"
-    // //% weight=190
-    // //% block="set car %CutebotProTurn for angle %CutebotProAngle"
-    // export function trolleySteering(turn: CutebotProTurn, angle: CutebotProAngle): void {
-    //     let buf = pins.createBuffer(7)
-    //     let curtime = 0
-    //     let oldtime = 0
-    //     let tempangle = 0
-    //     let orientation = 0
-    //     let cmd = 0
-    //     CutebotPro.pwmCruiseControl(0, 0)
-    //     basic.pause(1000)
+    /**
+     * set the trolley to rotate at a specific Angle
+     */
+    //% group="PID Control"
+    //% weight=190
+    //% block="set car %TPBotTurn for angle %TPBotTurnAngle"
+    export function pid_run_Steering(turn: TPBotTurn, angle: TPBotTurnAngle): void {
+        let l_angle_h = 0;
+        let l_angle_l = 0;
+        let r_angle_h = 0;
+        let r_angle_l = 0;
+        let direction = 0;
+        
+        if (turn == TPBotTurn.leftsteering){
+            r_angle_h = (angle*2) >> 8;
+            r_angle_l = (angle*2) & 0xFF;
+            direction = 0;
+        }
+        else if (turn == TPBotTurn.Rightsteering){
+            l_angle_h = (angle*2) >> 8;
+            l_angle_l = (angle*2) & 0xFF;
+            direction = 0;
+        }
+        else if (turn == TPBotTurn.Stay_leftsteering){
+            r_angle_h = angle >> 8;
+            r_angle_l = angle & 0xFF;
+            l_angle_h = angle >> 8;
+            l_angle_l = angle & 0xFF;
+            direction = 1;
+        }
+        else if (turn == TPBotTurn.Stay_Rightsteering){
+            r_angle_h = angle >> 8;
+            r_angle_l = angle & 0xFF;
+            l_angle_h = angle >> 8;
+            l_angle_l = angle & 0xFF;
+            direction = 2;
+        }
 
-    //     if (angle == CutebotProAngle.Angle45)
-    //         tempangle = 150
-    //     else if (angle == CutebotProAngle.Angle90)
-    //         tempangle = 316
-    //     else if (angle == CutebotProAngle.Angle135)
-    //         tempangle = 450
-    //     else
-    //         tempangle = 630
-
-    //     if (turn == CutebotProTurn.Left) {
-    //         orientation = CutebotProWheel.RightWheel
-    //         cmd = 0x04
-    //     }
-    //     else if (turn == CutebotProTurn.Right) {
-    //         orientation = CutebotProWheel.LeftWheel
-    //         cmd = 0x04
-    //     }
-    //     else {
-    //         orientation = CutebotProWheel.AllWheel
-    //         cmd = 23
-    //         tempangle = tempangle + 4
-    //     }
-
-    //     buf[0] = 0x99;
-    //     buf[1] = cmd;
-    //     buf[2] = orientation;
-    //     buf[3] = (tempangle >> 8) & 0xff;
-    //     buf[4] = (tempangle >> 0) & 0xff;
-    //     if (turn == CutebotProTurn.RightInPlace)
-    //         buf[5] = 0x00;
-    //     else
-    //         buf[5] = 0x01;
-    //     buf[6] = 0x88;
-    //     pins.i2cWriteBuffer(i2cAddr, buf)
-    //     basic.pause(1000)
-    //     while (1) {
-    //         if (readSpeed(CutebotProMotors1.M1, CutebotProSpeedUnits.Cms) == 0 && readSpeed(CutebotProMotors1.M2, CutebotProSpeedUnits.Cms) == 0) {
-    //             basic.pause(1000)
-    //             if (readSpeed(CutebotProMotors1.M1, CutebotProSpeedUnits.Cms) == 0 && readSpeed(CutebotProMotors1.M2, CutebotProSpeedUnits.Cms) == 0)
-    //                 break
-    //         }
-
-    //     }
-    //     basic.pause(1000)
-    // }
-
-
-
+        pins.i2cWriteBuffer(TPBotAdd, createBuf(0x42, [l_angle_h, l_angle_l, r_angle_h, r_angle_l, direction]));
+        basic.pause(angle * 10)
+    }
 }
