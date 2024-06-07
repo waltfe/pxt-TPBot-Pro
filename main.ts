@@ -142,6 +142,13 @@ namespace TPBot {
         S360 = 1
     }
 
+
+    export enum SpeedUnit {
+        //%block="cm/s"
+        Cm_s,
+        //%block="inch/s"
+        Inch_s
+    }
     export enum DistanceUnit {
         //%block="cm"
         Cm,
@@ -512,7 +519,7 @@ namespace TPBot {
     //% group="PID Control"
     //% block="set left wheel speed %lspeed, right wheel speed %rspeed %unit"
     //% weight=210
-    export function pid_speed_control(lspeed: number, rspeed: number, unit: DistanceUnit): void {
+    export function pid_speed_control(lspeed: number, rspeed: number, unit: SpeedUnit): void {
 
         let direction: number = 0;
         if (lspeed < 0) {
@@ -524,11 +531,11 @@ namespace TPBot {
         }
 
         switch (unit) {
-            case DistanceUnit.Cm:
+            case SpeedUnit.Cm_s:
                 lspeed *= 10;
                 rspeed *= 10;
                 break;
-            case DistanceUnit.Inch:
+            case SpeedUnit.Inch_s:
                 lspeed *= 304.8;
                 rspeed *= 304.8;
                 break;
