@@ -559,7 +559,7 @@ namespace TPBot {
     //% block="go %CutebotProOrientation %distance %CutebotProDistanceUnits"
     export function pid_run_distance(direction: Direction, distance: number, unit: DistanceUnit): void {
 
-        distance *= (unit == DistanceUnit.Cm_s ? 10 : 304.8)
+        distance *= (unit == DistanceUnit.Cm ? 10 : 304.8)
         let distance_h = distance >> 8;
         let distance_l = distance & 0xFF;
         let direction_flag = (direction == Direction.Forward ? 0 : 3);
