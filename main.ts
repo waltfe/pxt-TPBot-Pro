@@ -686,12 +686,14 @@ namespace TPBot {
             l_angle_h = angle >> 8;
             l_angle_l = angle & 0xFF;
         } else if (turn == TurnUnit.Stay_Leftsteering) {
+            angle *= 0.5;
             r_angle_h = angle >> 8;
             r_angle_l = angle & 0xFF;
             l_angle_h = angle >> 8;
             l_angle_l = angle & 0xFF;
             direction = 1;
         } else if (turn == TurnUnit.Stay_Rightsteering) {
+            angle *= 0.5;
             r_angle_h = angle >> 8;
             r_angle_l = angle & 0xFF;
             l_angle_h = angle >> 8;
