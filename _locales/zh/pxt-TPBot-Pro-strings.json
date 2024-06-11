@@ -25,6 +25,8 @@
   "TPBot.TrackingState.L_unline_R_line|block": "◌ ●",
   "TPBot.SpeedUnit.Cm_s|block":"厘米/秒",
   "TPBot.SpeedUnit.Inch_s|block":"英寸/秒",
+  "TPBot.DistanceUnit.Cm|block":"厘米",
+  "TPBot.DistanceUnit.Inch|block":"英寸",
   "TPBot.Direction.Forward|block":"前方",
   "TPBot.Direction.Backward|block":"后方",
   "TPBot.headlightClose|block": "关闭车头灯",
@@ -42,7 +44,7 @@
   "TPBot.trackEvent|block": "当 %side| 巡线传感器检测到 %state",
   "TPBot.trackLine|block": "巡线传感器的状态为 %state",
   "TPBot.trackSide|block": "%side 巡线传感器检测到 %state",
-  "TPBot.pid_speed_control|block": "设置左轮速度为 %lspeed,右轮速度为 %rspeed %unit",
+  "TPBot.pid_speed_control|block": "设置左轮速度为 %lspeed, 右轮速度为 %rspeed %unit",
   "TPBot.pid_run_distance|block": "向 %Direction 移动 %distance %DistanceUnit",
 
   "TPBot|block": "天蓬",
