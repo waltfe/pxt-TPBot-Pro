@@ -115,7 +115,7 @@ namespace TPBot {
 
     }
     /////////////////////////color/////////////////////////
-    export enum TPBotColorList {
+    export enum ColorList {
         //% block="Red"
         red,
         //% block="Green"
@@ -163,7 +163,7 @@ namespace TPBot {
         Backward
     }
 
-    export enum TPBotWheel {
+    export enum Wheel {
         //%block="WheelLeft"
         WheelLeft = 0,
         //%block="WheelRight"
@@ -179,18 +179,18 @@ namespace TPBot {
         Circle
     }
 
-    export enum TPBotTurn {
-        //%block="leftsteering"
-        leftsteering = 0,
+    export enum TurnUnit {
+        //%block="Leftsteering"
+        Leftsteering = 0,
         //%block="Rightsteering"
         Rightsteering = 1,
-        //%block="Stay_leftsteering"
-        Stay_leftsteering = 2,
+        //%block="Stay_Leftsteering"
+        Stay_Leftsteering = 2,
         //%block="Stay_Rightsteering"
         Stay_Rightsteering = 3
     }
 
-    export enum TPBotTurnAngle {
+    export enum TurnAngleUnit {
         //% block="45°"
         T45 = 45,
         //% block="90°"
@@ -204,7 +204,7 @@ namespace TPBot {
     /******************************************************************************************************
      * 工具函数
      ******************************************************************************************************/
-    function createBuf(command: number, params: number[]) {
+    function i2c_command_send(command: number, params: number[]) {
         let buff = pins.createBuffer(params.length + 4);
         buff[0] = 0xFF; // 帧头
         buff[1] = 0xF9; // 帧头
@@ -213,7 +213,7 @@ namespace TPBot {
         for (let i = 0; i < params.length; i++) {
             buff[i + 4] = params[i];
         }
-        return buff;
+        pins.i2cWriteBuffer(TPBotAdd, buff);
     }
 
     function initEvents(): void {
@@ -252,7 +252,7 @@ namespace TPBot {
 
         lspeed = Math.min(Math.abs(lspeed), 100);
         rspeed = Math.min(Math.abs(rspeed), 100);
-        pins.i2cWriteBuffer(TPBotAdd, createBuf(0x10, [lspeed, rspeed, direction]));
+        i2c_command_send(0x10, [lspeed, rspeed, direction]);
 
     }
 
@@ -496,7 +496,7 @@ namespace TPBot {
     //% g.min=0 g.max=255
     //% b.min=0 b.max=255
     export function headlightRGB(r: number, g: number, b: number): void {
-        pins.i2cWriteBuffer(TPBotAdd, createBuf(0x30, [r, g, b]));
+        i2c_command_send(0x30, [r, g, b]);
     }
     /**
     * Turn off the eye mask lamp.
@@ -521,7 +521,7 @@ namespace TPBot {
     //% speed.min=-100 speed.max=100
     export function setServo360(servo: ServoList, speed: number = 100): void {
         speed = Math.map(speed, -100, 100, 0, 180);
-        pins.i2cWriteBuffer(TPBotAdd, createBuf(0x20, [servo, speed]));
+        i2c_command_send(0x20, [servo, speed]);
     }
 
     /**
@@ -541,7 +541,7 @@ namespace TPBot {
                 angle = Math.map(angle, 0, 360, 0, 180)
                 break
         }
-        pins.i2cWriteBuffer(TPBotAdd, createBuf(0x20, [servo, angle]));
+        i2c_command_send(0x20, [servo, angle]);
     }
 
 
@@ -591,7 +591,7 @@ namespace TPBot {
         let rspeed_h = rspeed >> 8;
         let rspeed_l = rspeed & 0xFF;
 
-        pins.i2cWriteBuffer(TPBotAdd, createBuf(0x40, [lspeed_h, lspeed_l, rspeed_h, rspeed_l, direction]));
+        i2c_command_send(0x40, [lspeed_h, lspeed_l, rspeed_h, rspeed_l, direction]);
 
     }
 
@@ -607,7 +607,7 @@ namespace TPBot {
         let distance_h = distance >> 8;
         let distance_l = distance & 0xFF;
         let direction_flag = (direction == Direction.Forward ? 0 : 3);
-        pins.i2cWriteBuffer(TPBotAdd, createBuf(0x41, [distance_h, distance_l, direction_flag]));
+        i2c_command_send(0x41, [distance_h, distance_l, direction_flag]);
         basic.pause(distance * 2 + 100) // 小车以500mm/s速度运行, 冗余0.1s 
     }
 
@@ -616,8 +616,8 @@ namespace TPBot {
      */
     //% group="PID Control"
     //% weight=200
-    //% block="set %TPBotWheel rotation %angle %AngleUnits"
-    export function pid_run_angle(Wheel: TPBotWheel, angle: number, angleUnits: AngleUnits): void {
+    //% block="set %Wheel rotation %angle %AngleUnits"
+    export function pid_run_angle(wheel: Wheel, angle: number, angleUnits: AngleUnits): void {
         let l_angle_h = 0;
         let l_angle_l = 0;
         let r_angle_h = 0;
@@ -625,17 +625,17 @@ namespace TPBot {
         let direction = 0;
         if (angleUnits == AngleUnits.Circle) angle *= 360;
         if (angle < 0) direction = 3;
-
-        if (Wheel == TPBotWheel.WheelLeft || Wheel == TPBotWheel.WheelALL) {
+        angle *= 2;
+        if (wheel == Wheel.WheelLeft || wheel == Wheel.WheelALL) {
             l_angle_l = angle & 0xFF;
             l_angle_h = angle >> 8;
         }
-        if (Wheel == TPBotWheel.WheelRight || Wheel == TPBotWheel.WheelALL) {
+        if (wheel == Wheel.WheelRight || wheel == Wheel.WheelALL) {
             r_angle_l = angle & 0xFF;
             r_angle_h = angle >> 8;
         }
 
-        pins.i2cWriteBuffer(TPBotAdd, createBuf(0x42, [l_angle_h, l_angle_l, r_angle_h, r_angle_l, direction]));
+        i2c_command_send(0x42, [l_angle_h, l_angle_l, r_angle_h, r_angle_l, direction]);
         basic.pause(angle * 10)
     }
 
@@ -669,40 +669,36 @@ namespace TPBot {
      */
     //% group="PID Control"
     //% weight=190
-    //% block="set car %TPBotTurn for angle %TPBotTurnAngle"
-    export function pid_run_Steering(turn: TPBotTurn, angle: TPBotTurnAngle): void {
+    //% block="set car %TurnUnit for angle %TurnAngleUnit"
+    export function pid_run_Steering(turn: TurnUnit, angle: TurnAngleUnit): void {
         let l_angle_h = 0;
         let l_angle_l = 0;
         let r_angle_h = 0;
         let r_angle_l = 0;
         let direction = 0;
-        
-        if (turn == TPBotTurn.leftsteering){
-            r_angle_h = (angle*2) >> 8;
-            r_angle_l = (angle*2) & 0xFF;
-            direction = 0;
-        }
-        else if (turn == TPBotTurn.Rightsteering){
-            l_angle_h = (angle*2) >> 8;
-            l_angle_l = (angle*2) & 0xFF;
-            direction = 0;
-        }
-        else if (turn == TPBotTurn.Stay_leftsteering){
+
+        if (turn == TurnUnit.Leftsteering) {
+            angle *= 2;
+            r_angle_h = angle >> 8;
+            r_angle_l = angle & 0xFF;
+        } else if (turn == TurnUnit.Rightsteering) {
+            angle *= 2;
+            l_angle_h = angle >> 8;
+            l_angle_l = angle & 0xFF;
+        } else if (turn == TurnUnit.Stay_Leftsteering) {
             r_angle_h = angle >> 8;
             r_angle_l = angle & 0xFF;
             l_angle_h = angle >> 8;
             l_angle_l = angle & 0xFF;
             direction = 1;
-        }
-        else if (turn == TPBotTurn.Stay_Rightsteering){
+        } else if (turn == TurnUnit.Stay_Rightsteering) {
             r_angle_h = angle >> 8;
             r_angle_l = angle & 0xFF;
             l_angle_h = angle >> 8;
             l_angle_l = angle & 0xFF;
             direction = 2;
         }
-
-        pins.i2cWriteBuffer(TPBotAdd, createBuf(0x42, [l_angle_h, l_angle_l, r_angle_h, r_angle_l, direction]));
+        i2c_command_send(0x42, [l_angle_h, l_angle_l, r_angle_h, r_angle_l, direction]);
         basic.pause(angle * 10)
     }
 }
