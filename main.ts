@@ -600,7 +600,7 @@ namespace TPBot {
      */
     //% group="PID Control"
     //% weight=200
-    //% block="go %CutebotProOrientation %distance %CutebotProDistanceUnits"
+    //% block="go %Direction %distance %DistanceUnit"
     export function pid_run_distance(direction: Direction, distance: number, unit: DistanceUnit): void {
 
         distance *= (unit == DistanceUnit.Cm ? 10 : 304.8)
