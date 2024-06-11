@@ -23,6 +23,10 @@
   "TPBot.TrackingState.L_R_unline|block": "◌ ◌",
   "TPBot.TrackingState.L_line_R_unline|block": "● ◌",
   "TPBot.TrackingState.L_unline_R_line|block": "◌ ●",
+  "TPBot.SpeedUnit.Cm_s|block":"厘米/秒",
+  "TPBot.SpeedUnit.Inch_s|block":"英寸/秒",
+  "TPBot.Direction.Forward|block":"前方",
+  "TPBot.Direction.Backward|block":"后方",
   "TPBot.headlightClose|block": "关闭车头灯",
   "TPBot.headlightColor|block": "设置车头灯的颜色为 $color",
   "TPBot.headlightRGB|block": "设置车头灯的颜色为 红:%r 绿:%g 蓝:%b",
@@ -38,6 +42,9 @@
   "TPBot.trackEvent|block": "当 %side| 巡线传感器检测到 %state",
   "TPBot.trackLine|block": "巡线传感器的状态为 %state",
   "TPBot.trackSide|block": "%side 巡线传感器检测到 %state",
+  "TPBot.pid_speed_control|block": "设置左轮速度为 %speed,右轮速度为 %speed %unit",
+  "TPBot.pid_run_distance|block": "向 %CutebotProOrientation 移动 %distance %CutebotProDistanceUnits",
+  
   "TPBot|block": "天蓬",
   "{id:category}TPBot": "天蓬"
 }
