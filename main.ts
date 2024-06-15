@@ -608,7 +608,7 @@ namespace TPBot {
         let distance_l = distance & 0xFF;
         let direction_flag = (direction == Direction.Forward ? 0 : 3);
         i2c_command_send(0x41, [distance_h, distance_l, direction_flag]);
-        basic.pause(distance * 2 + 100) // 小车以500mm/s速度运行, 冗余0.1s 
+        basic.pause(distance * 2) // 小车以500mm/s速度运行
     }
 
     /**
@@ -636,7 +636,7 @@ namespace TPBot {
         }
 
         i2c_command_send(0x42, [l_angle_h, l_angle_l, r_angle_h, r_angle_l, direction]);
-        basic.pause(angle * 10)
+        basic.pause(angle * 5)
     }
 
     let blockLength: number = 0;
@@ -686,14 +686,12 @@ namespace TPBot {
             l_angle_h = angle >> 8;
             l_angle_l = angle & 0xFF;
         } else if (turn == TurnUnit.Stay_Leftsteering) {
-            angle *= 0.5;
             r_angle_h = angle >> 8;
             r_angle_l = angle & 0xFF;
             l_angle_h = angle >> 8;
             l_angle_l = angle & 0xFF;
             direction = 1;
         } else if (turn == TurnUnit.Stay_Rightsteering) {
-            angle *= 0.5;
             r_angle_h = angle >> 8;
             r_angle_l = angle & 0xFF;
             l_angle_h = angle >> 8;
@@ -701,6 +699,6 @@ namespace TPBot {
             direction = 2;
         }
         i2c_command_send(0x42, [l_angle_h, l_angle_l, r_angle_h, r_angle_l, direction]);
-        basic.pause(angle * 10)
+        basic.pause(angle * 5)
     }
 }
