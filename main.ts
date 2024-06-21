@@ -573,18 +573,22 @@ namespace TPBot {
                 rspeed *= 10;
                 break;
             case SpeedUnit.Inch_s:
-                lspeed *= 304.8;
-                rspeed *= 304.8;
+                lspeed *= 25.4;
+                rspeed *= 25.4;
                 break;
         }
 
-        lspeed = Math.abs(lspeed);
-        lspeed = Math.min(lspeed, 500);
-        lspeed = Math.max(lspeed, 200);
+        if(lspeed != 0){
+            lspeed = Math.abs(lspeed);
+            lspeed = Math.min(lspeed, 500);
+            lspeed = Math.max(lspeed, 200);
+        }
 
-        rspeed = Math.abs(rspeed);
-        rspeed = Math.min(rspeed, 500);
-        rspeed = Math.max(rspeed, 200);
+        if(rspeed != 0){
+            rspeed = Math.abs(rspeed);
+            rspeed = Math.min(rspeed, 500);
+            rspeed = Math.max(rspeed, 200);
+        }
 
         let lspeed_h = lspeed >> 8;
         let lspeed_l = lspeed & 0xFF;
@@ -603,7 +607,7 @@ namespace TPBot {
     //% block="go %Direction %distance %DistanceUnit"
     export function pid_run_distance(direction: Direction, distance: number, unit: DistanceUnit): void {
 
-        distance *= (unit == DistanceUnit.Cm ? 10 : 304.8)
+        distance *= (unit == DistanceUnit.Cm ? 10 : 25.4)
         let distance_h = distance >> 8;
         let distance_l = distance & 0xFF;
         let direction_flag = (direction == Direction.Forward ? 0 : 3);
