@@ -4,8 +4,8 @@
 //% weight=0 color=#32b9b9 icon="\uf1b9"
 //% block="TPBot" 
 namespace TPBot {
-    const TPBotAdd = 0x10
-    let _initEvents = true
+    const tpbotAdd = 0x10
+    let initEventUseOne = true
     /**
     * List of driving directions
     */
@@ -117,19 +117,19 @@ namespace TPBot {
     /////////////////////////color/////////////////////////
     export enum ColorList {
         //% block="Red"
-        red,
+        Red,
         //% block="Green"
-        green,
+        Green,
         //% block="Blue"
-        blue,
+        Blue,
         //% block="Cyan"
-        cyan,
+        Cyan,
         //% block="Magenta"
-        magenta,
+        Magenta,
         //% block="Yellow"
-        yellow,
+        Yellow,
         //% block="White"
-        white
+        White
     }
 
     /**
@@ -204,7 +204,7 @@ namespace TPBot {
     /******************************************************************************************************
      * 工具函数
      ******************************************************************************************************/
-    function i2c_command_send(command: number, params: number[]) {
+    function i2cCommandSend(command: number, params: number[]) {
         let buff = pins.createBuffer(params.length + 4);
         buff[0] = 0xFF; // 帧头
         buff[1] = 0xF9; // 帧头
@@ -213,14 +213,14 @@ namespace TPBot {
         for (let i = 0; i < params.length; i++) {
             buff[i + 4] = params[i];
         }
-        pins.i2cWriteBuffer(TPBotAdd, buff);
+        pins.i2cWriteBuffer(tpbotAdd, buff);
     }
 
     function initEvents(): void {
-        if (_initEvents) {
+        if (initEventUseOne) {
             pins.setEvents(DigitalPin.P13, PinEventType.Edge);
             pins.setEvents(DigitalPin.P14, PinEventType.Edge);
-            _initEvents = false;
+            initEventUseOne = false;
         }
     }
 
@@ -229,18 +229,18 @@ namespace TPBot {
     /******************************************************************************************************
      * 积木块定义
      ******************************************************************************************************/
-
+    //
     /**
      * Set the speed of left and right wheels. 
      * @param lspeed Left wheel speed , eg: 100
-     * @param rspeed Right wheel speed, eg: -100
+     * @param rspeed Right wheel speed, eg: 100
      */
     //% weight=99
     //% group="Basic functions"
     //% block="Set left wheel speed at %lspeed\\%| right wheel speed at %rspeed\\%"
     //% lspeed.min=-100 lspeed.max=100
     //% rspeed.min=-100 rspeed.max=100
-    export function motor_control(lspeed: number = 50, rspeed: number = 50): void {
+    export function motorControl(lspeed: number = 50, rspeed: number = 50): void {
 
         let direction: number = 0;
         if (lspeed < 0) {
@@ -252,38 +252,40 @@ namespace TPBot {
 
         lspeed = Math.min(Math.abs(lspeed), 100);
         rspeed = Math.min(Math.abs(rspeed), 100);
-        i2c_command_send(0x10, [lspeed, rspeed, direction]);
+        i2cCommandSend(0x10, [lspeed, rspeed, direction]);
 
     }
 
     /**
-    * Setting the direction and time of travel.
-    * @param direc Left wheel speed , eg: DriveDirection.Forward
-    * @param speed Travel time, eg: 100
+    * Set the direction, speed, and time of travel.
+    * @param direc Setting the direction , eg: DriveDirection.Forward
+    * @param speed Setting the speed, eg: 100
+    * @param time Setting the time, eg: 1
     */
     //% weight=95
     //% group="Basic functions"
     //% block="Go %direc at speed %speed\\% for %time seconds"
     //% speed.min=0 speed.max=100
     //% direc.fieldEditor="gridpicker" direc.fieldOptions.columns=2
+
     export function setTravelTime(direc: DriveDirection, speed: number, time: number): void {
         if (direc == 0) {
-            motor_control(speed, speed)
+            motorControl(speed, speed)
             basic.pause(time * 1000)
             stopCar()
         }
         if (direc == 1) {
-            motor_control(-speed, -speed)
+            motorControl(-speed, -speed)
             basic.pause(time * 1000)
             stopCar()
         }
         if (direc == 2) {
-            motor_control(-speed, speed)
+            motorControl(-speed, speed)
             basic.pause(time * 1000)
             stopCar()
         }
         if (direc == 3) {
-            motor_control(speed, -speed)
+            motorControl(speed, -speed)
             basic.pause(time * 1000)
             stopCar()
         }
@@ -291,8 +293,8 @@ namespace TPBot {
 
     /**
     * Setting the direction and speed of travel.
-    * @param direc Left wheel speed , eg: DriveDirection.Forward
-    * @param speed Travel time, eg: 100
+    * @param direc Setting the direction , eg: DriveDirection.Forward
+    * @param speed Setting the speed, eg: 100
     */
     //% weight=90
     //% group="Basic functions"
@@ -301,16 +303,16 @@ namespace TPBot {
     //% direc.fieldEditor="gridpicker" direc.fieldOptions.columns=2
     export function setTravelSpeed(direc: DriveDirection, speed: number): void {
         if (direc == 0) {
-            motor_control(speed, speed)
+            motorControl(speed, speed)
         }
         if (direc == 1) {
-            motor_control(-speed, -speed)
+            motorControl(-speed, -speed)
         }
         if (direc == 2) {
-            motor_control(-speed, speed)
+            motorControl(-speed, speed)
         }
         if (direc == 3) {
-            motor_control(speed, -speed)
+            motorControl(speed, -speed)
         }
     }
 
@@ -321,7 +323,7 @@ namespace TPBot {
     //% group="Basic functions"
     //% block="Stop the car immediately"
     export function stopCar(): void {
-        motor_control(0, 0);
+        motorControl(0, 0);
     }
 
     /**
@@ -387,6 +389,8 @@ namespace TPBot {
     }
     /**
     * Runs when line sensor finds or loses.
+    * @MbPins side Line sensor edge , eg: MbPins.Left
+    * @MbEvents state Line sensor status, eg: MbEvents.FindLine
     */
     //% weight=50
     //% group="Basic functions"
@@ -448,7 +452,7 @@ namespace TPBot {
     //% weight=35
     //% group="Basic functions"
     //% block="Sonar distance %judge %dis cm"
-    //% dis.min=1 dis.max=400
+    //% dis.min=5 dis.max=400
     //% judge.fieldEditor="gridpicker" judge.fieldOptions.columns=2
     export function sonarJudge(judge: Sonarjudge, dis: number): boolean {
         if (judge == 0) {
@@ -496,7 +500,7 @@ namespace TPBot {
     //% g.min=0 g.max=255
     //% b.min=0 b.max=255
     export function headlightRGB(r: number, g: number, b: number): void {
-        i2c_command_send(0x30, [r, g, b]);
+        i2cCommandSend(0x30, [r, g, b]);
     }
     /**
     * Turn off the eye mask lamp.
@@ -521,7 +525,7 @@ namespace TPBot {
     //% speed.min=-100 speed.max=100
     export function setServo360(servo: ServoList, speed: number = 100): void {
         speed = Math.map(speed, -100, 100, 0, 180);
-        i2c_command_send(0x20, [servo, speed]);
+        i2cCommandSend(0x20, [servo, speed]);
     }
 
     /**
@@ -541,7 +545,7 @@ namespace TPBot {
                 angle = Math.map(angle, 0, 360, 0, 180)
                 break
         }
-        i2c_command_send(0x20, [servo, angle]);
+        i2cCommandSend(0x20, [servo, angle]);
     }
 
 
@@ -549,14 +553,17 @@ namespace TPBot {
     /***********************************************************************************************
      * PID控制
      ***********************************************************************************************/
-
+    //
     /**
      * control the car to travel at a specific speed (speed.min=20cm/s speed.max=50cm/s)
+     * @lspeed set the lspeed
+     * @rspeed set the rspeed
+     * @unit set the SpeedUnit
      */
     //% group="PID Control"
     //% block="set left wheel speed %lspeed, right wheel speed %rspeed %unit"
     //% weight=210
-    export function pid_speed_control(lspeed: number, rspeed: number, unit: SpeedUnit): void {
+    export function pidSpeedControl(lspeed: number, rspeed: number, unit: SpeedUnit): void {
 
         let direction: number = 0;
         if (lspeed < 0) {
@@ -595,33 +602,39 @@ namespace TPBot {
         let rspeed_h = rspeed >> 8;
         let rspeed_l = rspeed & 0xFF;
 
-        i2c_command_send(0x40, [lspeed_h, lspeed_l, rspeed_h, rspeed_l, direction]);
+        i2cCommandSend(0x40, [lspeed_h, lspeed_l, rspeed_h, rspeed_l, direction]);
 
     }
 
     /**
      * set the car to travel a specific distance(distance.max=6000cm, distance.min=0cm)
+     * @Direction set the direction eg: Direction.Forward
+     * @distance set the distance eg: 0
+     * @DistanceUnit set the DistanceUnit eg: DistanceUnit.Cm
      */
     //% group="PID Control"
     //% weight=200
     //% block="go %Direction %distance %DistanceUnit"
-    export function pid_run_distance(direction: Direction, distance: number, unit: DistanceUnit): void {
+    export function pidRunDistance(direction: Direction, distance: number, unit: DistanceUnit): void {
 
         distance *= (unit == DistanceUnit.Cm ? 10 : 25.4)
         let distance_h = distance >> 8;
         let distance_l = distance & 0xFF;
         let direction_flag = (direction == Direction.Forward ? 0 : 3);
-        i2c_command_send(0x41, [distance_h, distance_l, direction_flag]);
+        i2cCommandSend(0x41, [distance_h, distance_l, direction_flag]);
         basic.pause(distance * 2 + 200) // 小车以500mm/s速度运行
     }
 
     /**
-     * 
+     * Select the wheel and set the Angle or number of turns you want to turn
+     * @Wheel Select wheel eg: Wheel.WheelLeft
+     * @angle set the angle or number of turns eg: 0
+     * @angleUnits set the angle unit eg: AngleUnit.angle
      */
     //% group="PID Control"
     //% weight=200
     //% block="set %Wheel rotation %angle %AngleUnits"
-    export function pid_run_angle(wheel: Wheel, angle: number, angleUnits: AngleUnits): void {
+    export function pidRunAngle(wheel: Wheel, angle: number, angleUnits: AngleUnits): void {
         let l_angle_h = 0;
         let l_angle_l = 0;
         let r_angle_h = 0;
@@ -639,7 +652,7 @@ namespace TPBot {
             r_angle_h = angle >> 8;
         }
 
-        i2c_command_send(0x42, [l_angle_h, l_angle_l, r_angle_h, r_angle_l, direction]);
+        i2cCommandSend(0x42, [l_angle_h, l_angle_l, r_angle_h, r_angle_l, direction]);
         basic.pause(angle * 2 + 200)
     }
 
@@ -648,33 +661,38 @@ namespace TPBot {
 
     /**
     * set block length
+    * @length set the length of each block eg: 0
+    * @DistanceUnit set the DistanceUnit eg: DistanceUnit.Cm
     */
     //% group="PID Control"
     //% weight=180
     //% block="set length of the squares as %length %DistanceUnit"
-    export function pid_block_set(length: number, distanceUnit: DistanceUnit): void {
+    export function pidBlockSet(length: number, distanceUnit: DistanceUnit): void {
         blockLength = length
         blockUnit = distanceUnit
     }
 
     /**
     * run a specific number of block
+    * @cnt set the number of block eg: 0
     */
     //% group="PID Control"
     //% weight=170
     //% block="go forward %cnt squares"
-    export function pid_run_block(cnt: number): void {
-        pid_run_distance(Direction.Forward, blockLength * cnt, blockUnit)
+    export function pidRunBlock(cnt: number): void {
+        pidRunDistance(Direction.Forward, blockLength * cnt, blockUnit)
     }
 
 
     /**
      * set the trolley to rotate at a specific Angle
+     * @TurnUnit set the rotation mode eg: TurnUnit.Leftsteering
+     * @TurnAngleUnit set the angle unit eg: TurnAngleUnit.T45
      */
     //% group="PID Control"
     //% weight=190
     //% block="set car %TurnUnit for angle %TurnAngleUnit"
-    export function pid_run_Steering(turn: TurnUnit, angle: TurnAngleUnit): void {
+    export function pidRunSteering(turn: TurnUnit, angle: TurnAngleUnit): void {
         let l_angle_h = 0;
         let l_angle_l = 0;
         let r_angle_h = 0;
@@ -702,7 +720,7 @@ namespace TPBot {
             l_angle_l = angle & 0xFF;
             direction = 2;
         }
-        i2c_command_send(0x42, [l_angle_h, l_angle_l, r_angle_h, r_angle_l, direction]);
+        i2cCommandSend(0x42, [l_angle_h, l_angle_l, r_angle_h, r_angle_l, direction]);
         basic.pause(angle * 2 + 200)
     }
 }
